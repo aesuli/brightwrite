@@ -1,4 +1,5 @@
-jupyter>=1.0.0
-notebook>=6.5.4
-rise>=5.7.1
-tqdm>=4.65.0
+jupyter~=1.0.0
+notebook~=6.5.4
+RISE~=5.7
+tqdm
+wordcloud

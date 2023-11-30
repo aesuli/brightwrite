@@ -19,9 +19,7 @@ def carica_esempi(filename):
     with open(filename, mode='rt', encoding='utf-8') as infile:
         linee = infile.readlines()
     for linea in tqdm(linee):
-        esempi.append(cerca_parole.findall(linea))
-    print(f'Ho caricato {len(esempi)} esempi')
-    print()
+        esempi.append([word if not word.isnumeric() else 'NUM' for word in cerca_parole.findall(linea)])
     return esempi
 
 
@@ -31,8 +29,8 @@ def stampa_esempi(esempi, num):
     :param esempi: lista di frasi rappresentate come liste di parole e punteggiatura
     :param num: numero di esempi da stampare
     """
-    for i in range(num + 1):
-        print(f'{i + 1}\t{" ".join(esempi[i])}')
+    for i in range(num):
+        print(f'{i + 1}\t{" ".join(esempi[i])[:70]}...')
 
 
 def costruisci_vocabolario(esempi):
@@ -66,8 +64,8 @@ def conta_frequenze(esempi):
     return list(zip(*contatore.most_common()))
 
 
-def conta_frequenze_nei_contesti(esempi, contesto_massimo=4, frequenza_minima=2,
-                                 frequenza_minima_contesto=2):
+def conta_frequenze_nei_contesti(esempi, contesto_massimo=3, frequenza_minima=2,
+                                 frequenza_minima_contesto=3):
     """
     Calcola il vocabolario e le frequenze, condizionati ai contesti, dagli esempi.
     :param esempi: lista di frasi rappresentate come liste di parole e punteggiatura
@@ -114,10 +112,13 @@ def conta_frequenze_nei_contesti(esempi, contesto_massimo=4, frequenza_minima=2,
         modello[c] = {key: list(zip(*value.items())) for key, value in modello[c].items()}
 
     size = 0
+    contesti = 0
     for modello_c in modello:
         for contesto, (vocab, freq) in modello_c.items():
+            contesti += 1
             size += len(vocab)
-    print(f'Numero totale di parametri nel modello: {size}')
+    print(f'Numero contesti: {contesti}')
+    print(f'Numero totale di parametri: {size}')
     return modello
 
 
@@ -133,7 +134,7 @@ def mostra_frequenze_per_contesto(modello, contesto, show=10):
         parole, frequenze = modello[len(contesto)][contesto]
         for i, (parola, frequenza) in enumerate(zip(parole, frequenze)):
             if i >= show:
-                print(f'  ... (+{len(parole)-i})')
+                print(f'  ... (+{len(parole) - i})')
                 break
             print(f'{frequenza:5} {parola:30}', end=' ')
     except:
@@ -165,7 +166,8 @@ def genera_testo(modello, contesto=None, lunghezza_min=7, lunghezza_max=20, inte
                 modello_c = modello[c][tuple(sequenza[-c:])]
                 parola = random.choices(modello_c[0], k=1, weights=modello_c[1])[0]
                 if dettagli:
-                    print(f'Contesto: "{" ".join(sequenza[-c:])}"\t{sum(modello_c[1])} opzioni\t-> "{parola}"')
+                    print(
+                        f'Contesto: "{" ".join(sequenza[-(len(modello) - 1):])}"\t{sum(modello_c[1])} opzioni\t-> "{parola}"')
                 sequenza.append(parola)
                 break
             except KeyError:
